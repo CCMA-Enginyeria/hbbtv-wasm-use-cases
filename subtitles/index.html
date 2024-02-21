@@ -3,12 +3,9 @@
 	<title>EBU-TT-D Example</title>
 	<link rel="stylesheet" href="css/subtitles.css">
 	<script type="module" src="./index.js?xx"></script>
-	<script type="text/javascript">
-		
-	</script>
 </head>
 <body>
-	<h1>CCMA EBU-TT-D Subtitles parser</h1>
+	<h1>CCMA EBU-TT-D Subtitles parser with WASM</h1>
 	<!-- Container for video and subtitles -->
 	<div class="subtitles-container" style="width:640px;height:360px;background-color:black;position:relative;">
 		<!-- Video -->
@@ -19,6 +16,28 @@
 		<!-- End subtitles layer -->
 	</div>
 	<!-- End container for video and subtitles -->
+
+	<div id="log">
+		waiting for logs
+	</div>
+	<script type="text/javascript">
+		const log = document.querySelector("#log");
+		const debugTimers = {};
+		window.debugTimers = {};
+		window.startDebugTimer = (id) => {
+			window.debugTimers[id] = {
+				start: performance.now()
+			}
+		}
+		window.endDebugTimer = (id) => {
+			log.innerHTML = id + ': ' + (performance.now() - window.debugTimers[id].start);
+			window.debugTimers[id] = {
+				start: window.debugTimers[id].start,
+				end: performance.now()
+			}
+			
+		}
+	</script>
 
 	<!-- Form for change the video and subtitle -->
 	<form action="#">

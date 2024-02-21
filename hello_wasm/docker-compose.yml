@@ -7,7 +7,7 @@ services:
     ports:
       - 80:80
   wasm-compiler:
-    image: wasm-pack
+    build: ../wasm-pack-docker
     volumes:
       - ./:/usr/src/myapp
       - /usr/src/myapp/target

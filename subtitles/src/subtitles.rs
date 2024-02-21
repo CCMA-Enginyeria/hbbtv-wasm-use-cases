@@ -11,16 +11,12 @@ extern "C" {
     #[wasm_bindgen(js_namespace = console)]
     fn log(s: &str);
 
-    #[wasm_bindgen(js_namespace = console)]
-    fn time(s: &str);
-
-    #[wasm_bindgen(js_namespace = console)]
-    fn timeEnd(s: &str);
-
     #[wasm_bindgen()]
     fn showSubtitle(s: &str, text: &str);
     fn hideSubtitle(s: &str);
     fn existSubtitle(s: &str) -> bool;
+    fn startDebugTimer(s: &str);
+    fn endDebugTimer(s: &str);
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
@@ -600,7 +596,7 @@ impl Subtitles {
     fn show_subtile(&self, p: &P) {
         if (self.tt.is_some()) {
             if (existSubtitle(&p.id) == false) {
-                time("show subtitle");
+                startDebugTimer(&format!("show subtitle {}", &p.id));
                 let default_styles = self.get_default_styles();
                 let mut region_styles = "".to_string();
                 if (p.region.is_some() == true) {
@@ -624,7 +620,7 @@ impl Subtitles {
                     default_styles, region_styles, p.id, text
                 );
                 showSubtitle(&p.id, &text);
-                timeEnd("show subtitle");
+                endDebugTimer(&format!("show subtitle {}", &p.id));
             }
         }
 

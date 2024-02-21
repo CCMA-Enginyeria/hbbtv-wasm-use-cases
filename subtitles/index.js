@@ -23,9 +23,9 @@ const runWasm = async () => {
   await init();
   const res = await fetch("./subtitles.xml");
   const text = await res.text();
-  console.time("parse");
+  window.startDebugTimer("parse");
   subtitles.parse(text);
-  console.timeEnd("parse");
+  window.endDebugTimer("parse");
 
   const video = document.querySelector("video");
   //https://api-media.ccma.cat/pvideo/media.jsp?media=video&versio=vast&idint=6266073&profile=apptv_tv3&format=dm
