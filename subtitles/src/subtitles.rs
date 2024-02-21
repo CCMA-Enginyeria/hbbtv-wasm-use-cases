@@ -1,13 +1,11 @@
 use quick_xml::de::from_str;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, ops::Index};
+use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
 mod cuepoints;
 
 #[wasm_bindgen]
 extern "C" {
-    // Use `js_namespace` here to bind `console.log(..)` instead of just
-    // `log(..)`
     #[wasm_bindgen(js_namespace = console)]
     fn log(s: &str);
 
@@ -212,12 +210,29 @@ pub struct SubtilesAction {
     is_show_action: bool,
 }
 
+pub struct CellResolution {
+    pub columns: usize,
+    pub rows: usize,
+}
+
+pub struct TTRootConfig {
+    cell_resolution: CellResolution,
+}
+
+pub struct ElementSize {
+    width: i32,
+    height: i32,
+}
+
 pub struct Subtitles {
     pub tt: Option<TT>,
     pub cuepoints: cuepoints::Cuepoints,
     pub cuepoint_to_subtitles_action: HashMap<String, SubtilesAction>,
     pub styles_index: HashMap<String, usize>,
     pub region_index: HashMap<String, usize>,
+    pub default_styles: String,
+    pub tt_root_config: TTRootConfig,
+    pub element_size: ElementSize,
 }
 
 impl Subtitles {
@@ -228,83 +243,33 @@ impl Subtitles {
             cuepoint_to_subtitles_action: HashMap::new(),
             styles_index: HashMap::new(),
             region_index: HashMap::new(),
+            default_styles: "".to_string(),
+            tt_root_config: TTRootConfig {
+                cell_resolution: CellResolution {
+                    columns: 40,
+                    rows: 24,
+                },
+            },
+            element_size: ElementSize {
+                width: 0,
+                height: 0,
+            },
         }
     }
 
+    pub fn set_element_size(&mut self, width: i32, height: i32) {
+        self.element_size.width = width;
+        self.element_size.height = height;
+    }
+
     pub fn load(&mut self, xml: &str) {
-        //log(&format!("hola? {}", xml));
         self.tt = from_str(xml).unwrap();
         self.add_cuepoints();
         self.get_styles();
         self.get_regions();
-        //let object: TT = from_str(&xml).unwrap();
-
-        // log(&format!("object {}", object.body.div.p.len()));
-        // for (index, p) in object.body.div.p.iter().enumerate() {
-        //     let x = Vec::new();
-        //     for (index, child) in p.children.as_ref().unwrap_or(&x).iter().enumerate() {
-        //         if let Choice::Span(span) = child {
-        //             log(&format!(
-        //                 "Flipa {}",
-        //                 span.text.as_ref().unwrap_or(&"".to_string())
-        //             ));
-        //         } else if let Choice::Br(br) = child {
-        //             log("no Flipa");
-        //         }
-        //         // if let Choice::Span(span) = child {
-        //         //     Some(span.style.clone())
-        //         // } else {
-        //         //     None
-        //         // }
-        //     }
-        // }
-
-        //log(&format!("object {}", object.name_attr));
-
-        /*
-        let mut reader = Reader::from_str(xml);
-        reader.trim_text(true);
-        let mut count = 0;
-        let mut txt = Vec::new();
-        let mut buf = Vec::new();
-
-        // The `Reader` does not implement `Iterator` because it outputs borrowed data (`Cow`s)
-        loop {
-            // NOTE: this is the generic case when we don't know about the input BufRead.
-            // when the input is a &str or a &[u8], we don't actually need to use another
-            // buffer, we could directly call `reader.read_event()`
-            match reader.read_event_into(&mut buf) {
-                Err(e) => panic!("Error at position {}: {:?}", reader.buffer_position(), e),
-                // exits the loop when reaching end of file
-                Ok(Event::Eof) => break,
-
-                Ok(Event::Start(e)) => match e.name().as_ref() {
-                    b"tt:tt" => {
-                        let x = e
-                            .attributes()
-                            .map(|a| a.unwrap().value.as_ref())
-                            .collect::<Vec<_>>()
-                            .to_string();
-                        //let y = x.collect::<Vec<_>>();
-                        //log(&format!("attributes values: {}", y.join(","));
-                    }
-                    // b"tt:tt" => log(
-                    //     "attributes values: {:?}",
-                    //     e.attributes().map(|a| a.unwrap().value).collect::<Vec<_>>(),
-                    // ),
-                    b"tag2" => count += 1,
-                    _ => (),
-                },
-                Ok(Event::Text(e)) => txt.push(e.unescape().unwrap().into_owned()),
-
-                // There are several other `Event`s we do not consider here
-                _ => (),
-            }
-            // if we don't keep a borrow elsewhere, we can clear the buffer to keep memory usage low
-            buf.clear();
-        }
-        */
+        self.get_default_styles();
     }
+
     fn get_styles(&mut self) {
         for (index, s) in self
             .tt
@@ -401,17 +366,21 @@ impl Subtitles {
             }
         }
     }
-    fn get_default_styles(&self) -> String {
-        let mut styles: Vec<&String> = Vec::new();
+
+    fn get_default_styles(&mut self) {
+        let mut styles: Vec<String> = Vec::new();
         if (self.tt.is_some()) {
             if (self.tt.as_ref().unwrap().body.style.is_some()) {
-                styles.push(self.tt.as_ref().unwrap().body.style.as_ref().unwrap());
+                let body_style_id = self.tt.as_ref().unwrap().body.style.as_ref().unwrap();
+                styles.push(self.get_style_string(body_style_id));
             }
             if (self.tt.as_ref().unwrap().body.div.style.is_some()) {
-                styles.push(self.tt.as_ref().unwrap().body.div.style.as_ref().unwrap());
+                let div_style_id = self.tt.as_ref().unwrap().body.div.style.as_ref().unwrap();
+                styles.push(self.get_style_string(div_style_id));
             }
         }
-        return styles.iter().map(|s| s.as_str()).collect();
+        styles.push(format!("font-size: {}", self.convert_cto_px("1c", "y")));
+        self.default_styles = styles.join(";");
     }
 
     fn get_style_string(&self, style_id: &String) -> String {
@@ -500,34 +469,26 @@ impl Subtitles {
                     if (region.style.is_some()) {
                         styles.push(self.get_style_string(region.style.as_ref().unwrap()));
                     }
-
-                    //style
                 }
-
-                /*
-                var ttsPositionArray = nodeValue.split(" "),
-                    top = ttsPositionArray[1],
-                    left = ttsPositionArray[0],
-                    height;
-                el.style.top = top;
-                el.style.left = left;
-                 */
-
-                // self.parse_tt_attributes("origin", region.origin);
-                // self.parse_tt_attributes("extent", region.extent);
-                // self.parse_tt_attributes("padding", region.padding);
-                // self.parse_tt_attributes("display_align", region.display_align);
-                // self.parse_tt_attributes("writing_mode", region.writing_mode);
-                // self.parse_tt_attributes("show_background", region.show_background);
-                // self.parse_tt_attributes("overflow", region.overflow);
-                // self.parse_tt_attributes("style", region.style);
-
-                //let style = self.parse_tt_attributes();
-                //styles.push(parse_tt_attributes
             }
         }
         return styles.join(";");
-        //return styles.iter().map(|s| s.as_str()).collect();
+    }
+
+    fn convert_cto_px(&self, value: &str, direction: &str) -> String {
+        let cell_size = if direction == "x" {
+            self.element_size.width / self.tt_root_config.cell_resolution.columns as i32
+        } else {
+            self.element_size.height / self.tt_root_config.cell_resolution.rows as i32
+        };
+
+        let value_string: String = value.chars().take(value.chars().count() - 1).collect();
+        let value_number = value_string.parse::<i32>();
+        if value_number.is_ok() {
+            return format!("{}px", value_number.as_ref().unwrap() * cell_size);
+        } else {
+            return format!("{}px", 0);
+        };
     }
 
     fn get_rows_for_p(&self, p: &P) -> String {
@@ -554,50 +515,10 @@ impl Subtitles {
         return texts.iter().map(|s| s.as_str()).collect();
     }
 
-    fn parse_tt_attributes(&self, node_name: &str, node_value: &str) -> HashMap<String, String> {
-        let mut attributes = HashMap::new();
-
-        match node_name {
-            "ttp:cellResolution" => {
-                //let cell_resolution_array: Vec<&str> = node_value.split(" ").collect();
-                //attributes.insert("columns".to_string(), cell_resolution_array[0].to_string());
-                //attributes.insert("rows".to_string(), cell_resolution_array[1].to_string());
-            }
-            "tts:backgroundColor" | "tts:color" => {
-                let rgba_color = self.hex_to_rgba(node_value);
-                if (rgba_color.is_some()) {
-                    attributes.insert(node_name[4..].to_string(), rgba_color.unwrap());
-                }
-            }
-            "tts:fontFamily" | "tts:fontStyle" | "tts:fontWeight" | "tts:lineHeight"
-            | "tts:textDecoration" | "tts:textAlign" | "tts:overflow" => {
-                attributes.insert(node_name[4..].to_string(), node_value.to_string());
-            }
-            "tts:fontSize" => {
-                let font_size = node_value.to_string();
-                attributes.insert("fontSize".to_string(), font_size);
-            }
-            "tts:wrapOption" => {
-                attributes.insert(
-                    "whiteSpace".to_string(),
-                    if node_value == "wrap" {
-                        "normal".to_string()
-                    } else {
-                        "nowrap".to_string()
-                    },
-                );
-            }
-            _ => {}
-        }
-
-        attributes
-    }
-
     fn show_subtile(&self, p: &P) {
         if (self.tt.is_some()) {
             if (existSubtitle(&p.id) == false) {
                 startDebugTimer(&format!("show subtitle {}", &p.id));
-                let default_styles = self.get_default_styles();
                 let mut region_styles = "".to_string();
                 if (p.region.is_some() == true) {
                     region_styles = self.get_region_styles(&p.region.as_ref().unwrap());
@@ -617,99 +538,11 @@ impl Subtitles {
                         </div>\
                     </div>\
                     ",
-                    default_styles, region_styles, p.id, text
+                    self.default_styles, region_styles, p.id, text
                 );
                 showSubtitle(&p.id, &text);
                 endDebugTimer(&format!("show subtitle {}", &p.id));
             }
-        }
-
-        /*
-          var defaultStyleWrapper, paragraphContainer, regionContainer;
-
-          if (that.el.innerHTML.indexOf('id="' + subt.id + '"') !== -1) {
-            return;
-          }
-          defaultStyleWrapper = document.createElement("div");
-
-          _.each(
-            that.defaultStyles,
-            function (style) {
-              defaultStyleWrapper = that.applyTTMLStyleIdToHTMLElement(
-                defaultStyleWrapper,
-                style
-              );
-            },
-            that
-          );
-
-          paragraphContainer = document.createElement("div");
-          paragraphContainer.className = "paragraphContainer";
-          paragraphContainer.innerHTML =
-            '<div class="multiRowAlign">' + subt.text + "</div>";
-          paragraphContainer = that.applyTTMLStyleIdToHTMLElement(
-            paragraphContainer,
-            subt.style
-          );
-
-          regionContainer = document.createElement("div");
-          regionContainer.id = subt.id;
-          regionContainer.className = "regionContainer";
-          regionContainer.innerHTML =
-            '<div class="displayAlign regionPadding">' +
-            paragraphContainer.outerHTML +
-            "</div>";
-
-          if (that.personalizationEnabled) {
-            if (that.getBackgroundPersonalizedValue() === "active") {
-              regionContainer.className += " user-force-background";
-            } else {
-              regionContainer.className += " user-no-background";
-            }
-          }
-
-          regionContainer = that.applyTTMLRegionIdToHTMLElement(
-            regionContainer,
-            subt.region
-          );
-
-          defaultStyleWrapper.appendChild(regionContainer);
-          that.el.appendChild(defaultStyleWrapper);
-        };
-           */
-    }
-    fn hex_to_rgba(&self, hex: &str) -> Option<String> {
-        let hex = hex.trim_start_matches('#');
-
-        match hex.len() {
-            // Color HEX sense transparència
-            6 => {
-                if let (Ok(r), Ok(g), Ok(b)) = (
-                    u8::from_str_radix(&hex[0..2], 16),
-                    u8::from_str_radix(&hex[2..4], 16),
-                    u8::from_str_radix(&hex[4..6], 16),
-                ) {
-                    Some(format!("rgb({}, {}, {})", r, g, b))
-                } else {
-                    None
-                }
-            }
-            // Color HEX amb transparència
-            8 => {
-                if let (Ok(r), Ok(g), Ok(b), Ok(a)) = (
-                    u8::from_str_radix(&hex[0..2], 16),
-                    u8::from_str_radix(&hex[2..4], 16),
-                    u8::from_str_radix(&hex[4..6], 16),
-                    u8::from_str_radix(&hex[6..8], 16),
-                ) {
-                    let alfa_in_float = (a as f32 / 255.0).to_string();
-                    Some(format!("rgba({}, {}, {}, {})", r, g, b, alfa_in_float))
-                } else {
-                    None
-                }
-            }
-            // En cas que hex no tingui una longitud vàlida
-            _ => None,
         }
     }
     fn hide_subtile(&self, p: &P) {
