@@ -37,5 +37,8 @@ const runWasm = async () => {
     const ms = video.currentTime * 1000;
     subtitles.updateSubtitlesForTimecode(ms);
   });
+  video.addEventListener("seeked", function () {
+    subtitleContainerEl.innerHTML = "";
+  });
 };
 runWasm();
