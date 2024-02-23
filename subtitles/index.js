@@ -30,13 +30,13 @@ const runWasm = async () => {
   window.startDebugTimer("parse");
   subtitles.parse(text);
   window.endDebugTimer("parse");
-
   const video = document.querySelector("video");
-  //https://api-media.ccma.cat/pvideo/media.jsp?media=video&versio=vast&idint=6266073&profile=apptv_tv3&format=dm
-  video.addEventListener("timeupdate", function () {
+  const checkSubtitles = () => {
     const ms = video.currentTime * 1000;
     subtitles.updateSubtitlesForTimecode(ms);
-  });
+    setTimeout(checkSubtitles, 0);
+  };
+  checkSubtitles();
   video.addEventListener("seeked", function () {
     subtitleContainerEl.innerHTML = "";
   });

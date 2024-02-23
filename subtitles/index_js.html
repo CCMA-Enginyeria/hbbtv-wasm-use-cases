@@ -54,15 +54,16 @@
 				subtitles.load(cuepoints, subtitlesSrc);
 				//Changes video and registers to some video events
 				$('video')
-					.attr('src', videoSrc)
-					.on('timeupdate', function (e) {
-						//Check if exists some cuepoint in the current time
-						cuepoints.checkCuepoints(e.currentTarget.currentTime * 1000);
-					})
-					.on('seeking seeked', function () {
-						//Clears subtitles and recalculate sizes
-						subtitles.clearAndRefresh();
-					});
+					.attr('src', videoSrc);
+				const video = document.querySelector("video");
+				const checkSubtitles = () => {
+					cuepoints.checkCuepoints(video.currentTime * 1000);
+					setTimeout(checkSubtitles, 0);
+				};
+				checkSubtitles();
+				video.addEventListener("seeked", function () {
+					subtitleContainerEl.innerHTML = "";
+				});
 			});
 		};
 
