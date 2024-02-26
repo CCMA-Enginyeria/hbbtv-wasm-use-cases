@@ -22,11 +22,33 @@ You could find the source code here: https://github.com/CCMA-Enginyeria/hbbtv-wa
 
 If you want to fork the repo or test on your devices it would be very welcome, and if you need help for that do not hesitate to ask me.
 
+
 ## Results
 
 We're still gathering all the information, as soon as we have a report we'll share them.
 
 ...
+
+### Calculate performance metrics 
+
+You can execute the following snippet to show the total time spent parsing and rendering subtitles:
+
+```
+window.debugTimers = Object.keys(window.debugTimers).reduce((memo, k) => {
+	memo[k] = {
+		...window.debugTimers[k],
+		elapsed: window.debugTimers[k].end - window.debugTimers[k].start
+	}
+	return memo;
+}, {})
+
+const elapsed = Object.keys(window.debugTimers).reduce((sum, k) => {
+	sum += window.debugTimers[k].elapsed;
+	return sum;
+}, 0)
+
+console.log(`total elapsed time: ${elapsed}`);
+```
 
 # Our opinion
 
