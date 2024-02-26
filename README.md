@@ -12,9 +12,9 @@ Even, that parser it's quite optimized (ie. preprocesing upfront and using memoi
 
 We have translated the JS code to RUST and compiled to WASM. And we have published to websites
 
-Wasm version: https://ccma-labs-generic.s3.eu-west-1.amazonaws.com/hbbtv-wasm-use-cases/subtitles/index.html
+Wasm version: https://d8k4k5rse7nb7.cloudfront.net/index.html
 
-Pure JS version: https://ccma-labs-generic.s3.eu-west-1.amazonaws.com/hbbtv-wasm-use-cases/subtitles/index_js.html
+Pure JS version: https://d8k4k5rse7nb7.cloudfront.net/index_js.html
 
 During the execution we save performance metrics so we can analyze them later (window.debugTimers).
 
