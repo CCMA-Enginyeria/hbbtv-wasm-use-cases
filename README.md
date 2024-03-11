@@ -25,9 +25,12 @@ If you want to fork the repo or test on your devices it would be very welcome, a
 
 ## Results
 
-We're still gathering all the information, as soon as we have a report we'll share them.
+Testing on PC we have detected the following results:
 
-...
+| ACTION | MEAN TIME IN JS (ms) | MEAN TIME IN WASM (ms) | IMPROVEMENT (%) | 
+|----|----|----|----|
+| EBU-TT-D PARSING | 70,20 | 37,20 | 47% |
+| SUBTITLES RENDERING | 0,36865 | 0,13766 | 62,6% |
 
 ### Calculate performance metrics 
 
