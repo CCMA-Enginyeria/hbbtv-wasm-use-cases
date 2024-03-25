@@ -1,0 +1,128 @@
+<html>
+<head>
+	<title>EBU-TT-D Example</title>
+	<link rel="stylesheet" href="css/subtitles.css">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.13.6/underscore-min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
+	<script src="js/subtitles.js"></script>
+	<script src="js/cuepoints.js"></script>
+	<script type="module" src="./index.js"></script>
+	<script type="text/javascript">
+		//
+		window.GLOBALCONFIGURATION = {
+			//Configuration for subtitles
+			"SUBTITLES": {
+				//Subtitle start threshold
+				"BEGINCUEPOINTSMARGIN": {
+					"POSITIVE": 500,
+					"NEGATIVE": 0
+				},
+				//Subtitle end threshold
+				"ENDCUEPOINTSMARGIN": {
+					"POSITIVE": 500,
+					"NEGATIVE": 0
+				}
+			},
+			//Configuration for cuepoints
+			"CUEPOINTSMARGIN": {
+				"POSITIVE": 0,
+				"NEGATIVE": 100
+			},
+		};
+		var subtitles, cuepoints;
+		
+		//Changes video and binds subtitles to video
+		var changeVideo = function () {
+			 var videoSrc = "https://mp4-down-medium-int2.ccma.cat/2/6/1707877315562.mp4",
+			 	subtitlesSrc = "./subtitles_js.xml";
+			// var videoSrc = $('input[name=video]').val(),
+			// 	subtitlesSrc = $('input[name=subtitles]').val();
+			
+			//Imports the SubtitlesPlugin and Cuepoints
+			require(['SubtitlesPlugin', 'Cuepoints'], function (SubtitlesPlugin, Cuepoints) {
+				//Constructs cuepoints if it didn't exist
+				if(!cuepoints){
+					cuepoints = new Cuepoints();
+				}
+				//Unloads subtitles if it was created before
+				if(subtitles){
+					subtitles.unload();
+				}
+				const subtitleContainerEl = document.querySelector("#subtitles_js");
+				//Constructs subtitles assigning the HTML element where it will render
+				subtitles = new SubtitlesPlugin(subtitleContainerEl);
+				//Loads subtitles from url and inserts in Cuepoints
+				subtitles.load(cuepoints, subtitlesSrc);
+				//Changes video and registers to some video events
+				//$('video')
+				//	.attr('src', videoSrc);
+				const video = document.querySelector("video");
+				const checkSubtitles = () => {
+					cuepoints.checkCuepoints(video.currentTime * 1000);
+					setTimeout(checkSubtitles, 0);
+				};
+				checkSubtitles();
+				video.addEventListener("seeked", function () {
+					subtitleContainerEl.innerHTML = "";
+				});
+			});
+		};
+
+		//Register to click on form submit button
+		// $(document).on('click', 'input[type=submit]', function (e) {
+		// 	changeVideo();
+		// 	return false;
+		// })
+		$(document).ready(() => {
+			changeVideo();
+		});
+	</script>
+</head>
+<body>
+	<div class="subtitles-container" style="width:1280px;height:720px;background-color:black;position:absolute;">
+		<video src="https://mp4-down-medium-int2.ccma.cat/2/6/1707877315562.mp4" style="top:0px;left:0px;width:1280px;height:720px;background-color:black;position:relative;" width="100%" height="100%" controls></video>
+		<div class="subtitles-container" style="top:0px;left:0px;width:640px;height:360px;pointer-events:none;position:absolute;">
+			<div style="color:white; text-align:center; margin-top:10px;">
+				<div>PURE JS</div>
+				<div id="log_js">
+					waiting for logs
+				</div>
+			</div>
+			<div id="subtitles_js" class="subtitles"></div>
+		</div>
+		<div class="subtitles-container" style="top:0px;left:640px;width:640px;height:360px;pointer-events:none;position:absolute;">
+			<div style="color:white; text-align:center; margin-top:10px;">
+				<div>WASM</div>
+				<div id="log">
+					waiting for logs
+				</div>
+			</div>
+			<div id="subtitles" class="subtitles"></div>
+		</div>
+	</div>
+	<script type="text/javascript">
+		const log = document.querySelector("#log");
+		const logJS = document.querySelector("#log_js");
+		window.debugTimers = {};
+		window.startDebugTimer = (id, isJS) => {
+			const idKey = id+'_'+isJS;
+			window.debugTimers[idKey] = {
+				start: performance.now()
+			}
+		}
+		window.endDebugTimer = (id, isJS) => {
+			const idKey = id+'_'+isJS;
+			if(isJS) {
+				logJS.innerHTML = id + ': ' + (performance.now() - window.debugTimers[idKey].start);
+			} else {
+				log.innerHTML = id + ': ' + (performance.now() - window.debugTimers[idKey].start);
+			}
+			window.debugTimers[idKey] = {
+				start: debugTimers[idKey].start,
+				end: performance.now()
+			}
+		}
+	</script>
+</body>
+</html>

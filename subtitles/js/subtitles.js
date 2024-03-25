@@ -22,7 +22,7 @@ define("SubtitlesPlugin", [], function () {
       var that = this,
         onSucces = function (response) {
           //parse & init
-          window.startDebugTimer("parse");
+          window.startDebugTimer("parse", true);
           that.getTTMetadata(response);
           //Molts valors per defecte ja estan preconfigurats al CSS.
           that.getStylesFromFile(response);
@@ -30,7 +30,7 @@ define("SubtitlesPlugin", [], function () {
           that.getEntriesFromFile(response);
           that.setupDefaultActiveRegions();
           that.addCuepoints();
-          window.endDebugTimer("parse");
+          window.endDebugTimer("parse", true);
           that.loadedResponse = response;
         },
         onError = function (e) {
@@ -567,7 +567,7 @@ define("SubtitlesPlugin", [], function () {
         if (that.el.innerHTML.indexOf('id="' + subt.id + '"') !== -1) {
           return;
         }
-        window.startDebugTimer("show subtitle "+ subt.id);
+        window.startDebugTimer("show subtitle "+ subt.id, true);
         defaultStyleWrapper = document.createElement("div");
 
         _.each(
@@ -613,7 +613,7 @@ define("SubtitlesPlugin", [], function () {
 
         defaultStyleWrapper.appendChild(regionContainer);
         that.el.appendChild(defaultStyleWrapper);
-        window.endDebugTimer("show subtitle "+ subt.id);
+        window.endDebugTimer("show subtitle "+ subt.id, true);
       };
     },
     hideSubtitle: function (subt) {
