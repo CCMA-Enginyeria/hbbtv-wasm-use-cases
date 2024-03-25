@@ -78,8 +78,33 @@
 			changeVideo();
 		});
 	</script>
+	 <script type="text/javascript">
+        function handleKeydown(event) {
+            if (event.keyCode === 13) {
+                const video = document.querySelector("video");
+				console.log(video);
+                if(video.paused) {
+					video.play();
+				} else {
+					video.pause();
+				}
+            }
+        }
+		function initHbbTV() {
+            var appMan = document.getElementById('oipfAppMan')
+			if(appMan.getOwnerApplication) {
+				appMan.getOwnerApplication(document);
+				appMan.show();
+				appMan.activate();
+				var keyset = appMan.privateData.keyset;
+			   keyset.setValue(keyset.ENTER);
+			}
+            document.addEventListener('keydown', handleKeydown);
+        }
+    </script>
+	<object id="oipfAppMan" type="application/oipfApplicationManager" style="width:0px; height:0px; position:absolute; visibility:hidden;"></object>
 </head>
-<body>
+<body onload="initHbbTV();">
 	<div class="subtitles-container" style="width:1280px;height:720px;background-color:black;position:absolute;">
 		<video src="https://mp4-down-medium-int2.ccma.cat/2/6/1707877315562.mp4" style="top:0px;left:0px;width:1280px;height:720px;background-color:black;position:relative;" width="100%" height="100%" controls></video>
 		<div class="subtitles-container" style="top:0px;left:0px;width:640px;height:360px;pointer-events:none;position:absolute;">
@@ -106,13 +131,15 @@
 		const logJS = document.querySelector("#log_js");
 		window.debugTimers = {};
 		window.startDebugTimer = (id, isJS) => {
-			const idKey = id+'_'+isJS;
+			const keySuffix = isJS ? 'js' : 'wasm';
+			const idKey = id+'_'+keySuffix;
 			window.debugTimers[idKey] = {
 				start: performance.now()
 			}
 		}
 		window.endDebugTimer = (id, isJS) => {
-			const idKey = id+'_'+isJS;
+			const keySuffix = isJS ? 'js' : 'wasm';
+			const idKey = id+'_'+keySuffix;
 			if(isJS) {
 				logJS.innerHTML = id + ': ' + (performance.now() - window.debugTimers[idKey].start);
 			} else {
