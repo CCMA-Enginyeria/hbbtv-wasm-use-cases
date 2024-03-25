@@ -78,13 +78,43 @@
 		});
 	</script>
 	 <script type="text/javascript">
-        function handleKeydown(event) {
+		function calculateElapseTime() {
+			window.debugTimers = Object.keys(window.debugTimers).reduce((memo, k) => {
+				memo[k] = {
+					...window.debugTimers[k],
+					elapsed: window.debugTimers[k].end - window.debugTimers[k].start
+				}
+				return memo;
+			}, {})
+		}
+        function getElapsedForTechnology(technologySuffix) {
+			const elapsed = Object.keys(window.debugTimers).reduce((sum, k) => {
+				if(k.indexOf(technologySuffix) === -1) {
+					return sum;
+				}
+				sum += window.debugTimers[k].elapsed;
+				return sum;
+			}, 0)
+			return elapsed;
+		}
+		function handleKeydown(event) {
+			console.log('event.keyCode', event.keyCode)
             if (event.keyCode === 13) {
                 const video = document.querySelector("video");
+				const results = document.querySelector("#results");
 				if(video.paused) {
 					video.play();
+					results.style.display = 'none';
 				} else {
 					video.pause();
+					calculateElapseTime();
+					const elapsedForJS = getElapsedForTechnology('js');
+					const elapsedForWasm = getElapsedForTechnology('wasm');
+					const improvement = ((elapsedForJS - elapsedForWasm) / elapsedForJS) * 100;
+					document.querySelector("#results_elapsed_js").innerHTML = elapsedForJS.toFixed(2);
+					document.querySelector("#results_elapsed_wasm").innerHTML = elapsedForWasm.toFixed(2);
+					document.querySelector("#results_elapsed_improvement").innerHTML = improvement.toFixed(2);
+					results.style.display = 'block';
 				}
             }
         }
@@ -110,7 +140,7 @@
 	<div class="subtitles-container" style="width:1280px;height:720px;background-color:black;position:absolute;">
 		<video src="https://mp4-down-medium-int2.ccma.cat/2/6/1707877315562.mp4" style="top:0px;left:0px;width:1280px;height:720px;background-color:black;position:relative;" width="100%" height="100%" controls></video>
 		<div class="subtitles-container" style="top:0px;left:0px;width:640px;height:360px;pointer-events:none;position:absolute;">
-			<div style="color:white; text-align:center; margin-top:10px;">
+			<div style="color:white; text-align:center; margin-top:10px; background-color: rgba(0,0,0,0.5);">
 				<div>PURE JS</div>
 				<div id="log_js">
 					waiting for logs
@@ -119,13 +149,27 @@
 			<div id="subtitles_js" class="subtitles"></div>
 		</div>
 		<div class="subtitles-container" style="top:0px;left:640px;width:640px;height:360px;pointer-events:none;position:absolute;">
-			<div style="color:white; text-align:center; margin-top:10px;">
+			<div style="color:white; text-align:center; margin-top:10px; background-color: rgba(0,0,0,0.5);">
 				<div>WASM</div>
 				<div id="log">
 					waiting for logs
 				</div>
 			</div>
 			<div id="subtitles" class="subtitles"></div>
+		</div>
+		<div id="results" style="color: white;display:none;margin-top: 10px;background-color: rgba(0, 0, 0, 0.5);position: absolute;top: 320px;left: 400px;font-size: 29px;padding: 10px;">
+			<div>
+				Elapsed time JS:
+				<span id="results_elapsed_js">...</span>ms
+			</div>
+			<div>
+				Elapsed time WASM:
+				<span id="results_elapsed_wasm">...</span>ms
+			</div>
+			<div>
+				Improvement:
+				<span id="results_elapsed_improvement">...</span>%
+			</div>
 		</div>
 	</div>
 	<script type="text/javascript">
