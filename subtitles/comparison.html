@@ -5,9 +5,8 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.13.6/underscore-min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
-	<script src="js/subtitles.js"></script>
-	<script src="js/cuepoints.js"></script>
-	<script type="module" src="./index.js"></script>
+	<script src="js/subtitles.js?v=hbbtv"></script>
+	<script src="js/cuepoints.js?v=hbbtv"></script>
 	<script type="text/javascript">
 		//
 		window.GLOBALCONFIGURATION = {
@@ -82,8 +81,7 @@
         function handleKeydown(event) {
             if (event.keyCode === 13) {
                 const video = document.querySelector("video");
-				console.log(video);
-                if(video.paused) {
+				if(video.paused) {
 					video.play();
 				} else {
 					video.pause();
@@ -93,11 +91,15 @@
 		function initHbbTV() {
             var appMan = document.getElementById('oipfAppMan')
 			if(appMan.getOwnerApplication) {
-				appMan.getOwnerApplication(document);
-				appMan.show();
-				appMan.activate();
-				var keyset = appMan.privateData.keyset;
-			   keyset.setValue(keyset.ENTER);
+				const app = appMan.getOwnerApplication(document);
+				try {
+					app.show();
+					app.activate();
+				} catch(e) {
+
+				}
+				var keyset = app.privateData.keyset;
+			   keyset.setValue(keyset.NAVIGATION);
 			}
             document.addEventListener('keydown', handleKeydown);
         }
@@ -151,5 +153,6 @@
 			}
 		}
 	</script>
+	<script type="module" src="./index.js?v=hbbtv"></script>
 </body>
 </html>

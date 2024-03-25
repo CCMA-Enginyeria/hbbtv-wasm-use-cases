@@ -16,6 +16,8 @@ Wasm version: https://d8k4k5rse7nb7.cloudfront.net/hbbtv-wasm-use-cases/subtitle
 
 Pure JS version: https://d8k4k5rse7nb7.cloudfront.net/hbbtv-wasm-use-cases/subtitles/index_js.html
 
+Comparison version (compatible with HbbTv): https://d8k4k5rse7nb7.cloudfront.net/hbbtv-wasm-use-cases/subtitles/comparison.html
+
 During the execution we save performance metrics so we can analyze them later (window.debugTimers).
 
 You could find the source code here: https://github.com/CCMA-Enginyeria/hbbtv-wasm-use-cases
